@@ -2,7 +2,7 @@ use device_query::Keycode;
 use device_query::MouseButton;
 use device_query::MousePosition;
 
-use chrono::prelude::*;
+use chrono::Utc;
 
 use serde::{Deserialize, Serialize};
 use serde_derive::Deserialize;
@@ -21,23 +21,14 @@ pub enum Input{
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Action {
     input: Input,
-    time_stamp: String,    
+    time_stamp: i64,    
 }
 
 impl Action {
     pub fn new(input: Input) -> Action{
-        Action { input: input, time_stamp: Utc::now().to_string() }
+        Action { input: input, time_stamp: Utc::now().timestamp() }
     }
     pub fn load(input: &str) -> Result<Action> {
         serde_json::from_str(input)
-        //let from = start_date;
-    }
-}
-
-#[cfg(test)]
-mod test{
-    #[test]
-    fn load_test() {
-        let input = "{\"input\":{\"mouse_move\":{\"deltaX\":486,\"deltaY\":677}},\"time_stamp\":\"2022-03-26 22:58:59.495967600 UTC\"}";
     }
 }

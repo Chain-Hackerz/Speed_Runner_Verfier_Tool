@@ -4,6 +4,7 @@ use device_query::{ DeviceEvents, DeviceState };
 use device_query::{Keycode, MousePosition, MouseButton};
 
 pub mod input;
+mod Input;
 
 use self::input::Action;
 
@@ -14,7 +15,7 @@ pub fn start(output: Arc<Mutex<Vec<Action>>>) -> JoinHandle<()> {
 
         let output_tmp = output.clone();
         let _guard = device_state.on_key_down(move |key_code: &Keycode| {
-            let button = key_code.clone();
+            let button:u64 = key_code.clone() as u64;
             let mut values = output_tmp.lock().unwrap();
             values.push(Action::new(input::Input::key_down{button: button}));
         });
@@ -22,7 +23,7 @@ pub fn start(output: Arc<Mutex<Vec<Action>>>) -> JoinHandle<()> {
         
         let output_tmp = output.clone();
         let _guard = device_state.on_key_up(move |key_code: &Keycode| {
-            let button = key_code.clone();
+            let button:u64 = key_code.clone() as u64;
             let mut values = output_tmp.lock().unwrap();
             values.push(Action::new(input::Input::key_up{button: button}));
         });

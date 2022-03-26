@@ -1,61 +1,55 @@
-use std::sync::{mpsc, Mutex};
+use std::sync::{Mutex, Arc};
+use std::thread::{self, JoinHandle};
+use device_query::{ DeviceEvents, DeviceState };
+use device_query::{Keycode, MousePosition, MouseButton};
 
-extern crate queues;
+pub mod input;
 
-use queues::*;
+use self::input::Action;
 
-use device_query::{DeviceEvents, DeviceState, CallbackGuard};
-use device_query::Keycode;
-use device_query::MouseButton;
-use device_query::MousePosition;
 
-use self::Input::Action;
+pub fn start(output: Arc<Mutex<Vec<Action>>>) -> JoinHandle<()> {
+    thread::spawn(move || {
+        let device_state = DeviceState::new();
 
-pub mod Input;
+        let output_tmp = output.clone();
+        let _guard = device_state.on_key_down(move |key_code: &Keycode| {
+            let button = key_code.clone();
+            let mut values = output_tmp.lock().unwrap();
+            values.push(Action::new(input::Input::key_down{button: button}));
+        });
 
-pub struct Listeners{
-    _key_down: CallbackGuard<fn(&Keycode)>,
-    _key_up: CallbackGuard<fn(&Keycode)>,
-    _mouse_move: CallbackGuard<fn(&MousePosition)>,
-    _mouse_up: CallbackGuard<fn(&usize)>,
-    _mouse_down: CallbackGuard<fn(&usize)>
-}
+        
+        let output_tmp = output.clone();
+        let _guard = device_state.on_key_up(move |key_code: &Keycode| {
+            let button = key_code.clone();
+            let mut values = output_tmp.lock().unwrap();
+            values.push(Action::new(input::Input::key_up{button: button}));
+        });
 
-pub fn start(output: Mutex<Vec<Action>>) -> Listeners {
+        let output_tmp = output.clone();
+        let _guard = device_state.on_mouse_down(move |mouse_button: &MouseButton| {
+            let button = mouse_button.clone();
+            let mut values = output_tmp.lock().unwrap();
+            values.push(Action::new(input::Input::mouse_button_down{button: button}));
+        });
 
-    let device_state = DeviceState::new();
+        let output_tmp = output.clone();
+        let _guard = device_state.on_mouse_up(move |mouse_button: &MouseButton| {
+            let button = mouse_button.clone();
+            let mut values = output_tmp.lock().unwrap();
+            values.push(Action::new(input::Input::mouse_button_up {button: button}));
+        });
 
-    let output2 = output.clone();
+        let output_tmp = output.clone();
+        let _guard = device_state.on_mouse_move(move |mouse_button: &MousePosition| {
+            let button = mouse_button.clone();
+            let mut values = output_tmp.lock().unwrap();
+            values.push(Action::new(input::Input::mouse_move { deltaX: button.0, deltaY: button.1 }));
+        });
 
-    let tmp : Listeners = Listeners {
-        _key_down: device_state.on_key_down(|key_code: &Keycode| {
-            println!("key down:{}", key_code);
-            let _guard = &output.lock().unwrap();
-            output.push(
-                Action::new(
-                    Input::key_down{
-                        button: key_code.clone()
-                    }
-                )
-            );
-        }),
-        _key_up: device_state.on_key_up(move |key_code: &Keycode| {
-            println!("key up:{}", key_code);
-            say_hello_world();
-        }),
-        _mouse_move: device_state.on_mouse_move(move |mouse_pos: &MousePosition| {
-            println!("mouse move:{:?}", mouse_pos);
-            say_hello_world();
-        }),
-        _mouse_up: device_state.on_mouse_up(move |mouse_button: &MouseButton| {
-            println!("mouse move:{:?}", mouse_button);
-            say_hello_world();
-        }),
-        _mouse_down: device_state.on_mouse_down(move |mouse_button: &MouseButton| {
-            println!("mouse move:{:?}", mouse_button);
-            say_hello_world();
-        }),
-    };
+        loop {
 
-    tmp
+        }
+    })
 }

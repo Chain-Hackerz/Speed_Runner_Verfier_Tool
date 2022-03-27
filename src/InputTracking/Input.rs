@@ -9,7 +9,7 @@ use serde_derive::Deserialize;
 use serde_json::Result;
 
 /// Input enum handles the storage of keyboard and mouse inputs
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Input{
     key_down{button: u64},
     key_up{button: u64},
@@ -18,7 +18,7 @@ pub enum Input{
     mouse_move{deltaX : i32, deltaY: i32},   
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Action {
     input: Input,
     time_stamp: i64,    
